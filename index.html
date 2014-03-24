@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> web socker 入门之 聊天室</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css"/>
+    <style>
+        body{font-family:'微软雅黑'}
+        .messages{height: 600px; overflow: auto; padding: 20px;}
+        li{line-height: 2}
+        .people{height: 600px;}
+        .send{margin: 20px 0; padding: 20px;}
+        .modal{top: 35%;}
+        .modal-backdrop{opacity: .8; display: none}
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="col-md-12 bg-success">
+        <h1>web socker 入门之 聊天室 demo</h1>
+    </div>
+    <div class="col-md-4 bg-info people">
+        <h2>在线用户(<span id="J_user_num"></span>)</h2>
+        <ul id="J_user">
+
+        </ul>
+    </div>
+    <div class="col-md-8 bg-danger messages">
+        <ul id="J_messages"></ul>
+    </div>
+    <div class="col-md-12 bg-warning send">
+        <input id="J_send" type="text" class="form-control" placeholder="聊两句嘛~">
+    </div>
+</div>
+
+<div id="J_modal" class="modal fade bs-example-modal-sm in">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">输入你的大名后进入聊天室</h4>
+            </div>
+            <div class="modal-body">
+                <p><input id="J_name" type="text" class="form-control" placeholder="你的名字~"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary">确定</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="J_modal_bg" class="modal-backdrop fade in"></div>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1/jquery.cookie.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    $(function(){
+        var socket = io.connect(),
+                $msg = $('#J_messages'),
+                $user = $('#J_user'),
+                $userNo = $('#J_user_num'),
+                $send = $('#J_send'),
+                $name = $('#J_name'),
+                $modal = $('#J_modal'),
+                $modalBg = $('#J_modal_bg'),
+                user;
+
+
+        socket.on('connect', function () {
+            /**
+             * init
+             * message 事件 监听socket 的send 方法
+             */
+            socket.on('message', function (data) {
+                var users = data.users,
+                    msg = data.msg,
+                    u = '',s = '';
+                if(users && users.length){
+                    users.forEach(function(item){
+                        u += '<li>'+ item +'</li>'
+                    });
+                    $user.append(u);
+                    $userNo.text(users.length + 1);
+                }
+
+                if(msg && msg.length){
+                    msg.forEach(function(item){
+                        s += '<li><span>'+ item.user +':</span>'+ item.msg +'</li>';
+                    });
+                    $msg.html(s)
+                }
+            });
+
+
+            //事件监听
+            socket.on('cMsg', function(item) {
+                $msg.append('<li><span>'+ item.user +':</span>'+ item.msg +'</li>');
+            });
+
+            /**
+             * 监听服务端返回的添加用户事件
+             */
+            socket.on('cAddUser',function(data){
+                $user.append('<li>'+ data.user +'</li>');
+                $userNo.text(data.num);
+                console.info('cUser',data)
+            });
+
+            socket.on('updateUser',function(item){
+                $userNo.text(item.num);
+                $user.find('li:contains('+ item.user +')').remove();
+            })
+
+        });
+
+        user = $.cookie('wsname');
+        if(user){
+            //告知服务器 你的姓名
+            socket.emit('sAddUser',user);
+            $user.append('<li>'+ user +'</li>');
+        }else{
+            var $modals = $modal.add($modalBg);
+            $modals.show();
+            $('.btn-primary',$modal).on('click',function(){
+                var name = $name.val() || 'Anonymous';
+                user = name;
+                $.cookie('wsname',name);
+                //告知服务器 你的姓名
+                socket.emit('sAddUser',name);
+                $user.append('<li>'+ name +'</li>');
+                $modals.hide();
+            });
+        }
+        /**
+         * 发送聊天信息
+         */
+        $send.keypress(function(e) {
+            if(e.which == 13) {
+                var message = $send.val();
+                socket.emit('sMsg',message);
+                $msg.append('<li><span>我：</span>'+ message +'</li>');
+                $send.val('');
+                e.preventDefault();
+            }
+        });
+
+
+
+
+
+
+
+
+
+    });
+</script>
+</body>
+</html>
