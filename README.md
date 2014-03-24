@@ -1,7 +1,7 @@
 chatroom
 =====
 
-利用web socker 简单实现 聊天室功能。服务端是nodeJs。
+利用web socket 简单实现 聊天室功能。服务端是nodeJs。
 
 需要用到 socket.io 组件。
 ```js
