@@ -8,9 +8,9 @@ chatroom
 npm install socket.io
 ```
 ## 参考文章
-[https://github.com/LearnBoost/socket.io/tree/master/examples]
-[http://socket.io/#how-to-use]
-[http://www.cnblogs.com/lhb25/p/nodejs-and-html5-websocket-framework.html]
+* https://github.com/LearnBoost/socket.io/tree/master/examples
+* http://socket.io/#how-to-use
+* http://www.cnblogs.com/lhb25/p/nodejs-and-html5-websocket-framework.html
 
 ## Changelog
 * v0.1 项目创建
